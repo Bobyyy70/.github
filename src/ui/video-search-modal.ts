@@ -1,13 +1,17 @@
 import { App, Modal, Setting, Notice } from 'obsidian';
-import { SearchResult, PluginSettings } from '../types';
+import { SearchResult, PluginSettings, IndustrySector, INDUSTRY_SECTORS } from '../types';
 import { VideoSearchService } from '../services/video-search-service';
 import { VideoProcessorService } from '../services/video-processor-service';
+import { SectorDetectionService } from '../services/sector-detection-service';
 
 export class VideoSearchModal extends Modal {
     private searchService: VideoSearchService;
     private processorService: VideoProcessorService;
+    private sectorService: SectorDetectionService;
     private searchResults: SearchResult[] = [];
+    private filteredResults: SearchResult[] = [];
     private resultsContainer: HTMLElement;
+    private selectedSector: IndustrySector | 'all' = 'all';
 
     constructor(
         app: App,
@@ -16,6 +20,7 @@ export class VideoSearchModal extends Modal {
         super(app);
         this.searchService = new VideoSearchService(settings);
         this.processorService = new VideoProcessorService(app, settings);
+        this.sectorService = new SectorDetectionService(settings);
     }
 
     onOpen() {
@@ -52,6 +57,29 @@ export class VideoSearchModal extends Modal {
                     platform = value as 'youtube' | 'gitlab' | 'all';
                 })
             );
+
+        // Filtre par secteur d'activité
+        if (this.settings.enableSectorDetection) {
+            const sectorDropdown = new Setting(searchContainer)
+                .setName('Secteur d\'activité')
+                .setDesc('Filtrer par domaine (détection automatique)')
+                .addDropdown(dropdown => {
+                    dropdown.addOption('all', '📂 Tous les secteurs');
+
+                    for (const sector of this.settings.enabledSectors) {
+                        const sectorInfo = INDUSTRY_SECTORS[sector];
+                        dropdown.addOption(sector, `${sectorInfo.icon} ${sectorInfo.label}`);
+                    }
+
+                    dropdown.setValue('all');
+                    dropdown.onChange(value => {
+                        this.selectedSector = value as IndustrySector | 'all';
+                        this.filterResults();
+                    });
+
+                    return dropdown;
+                });
+        }
 
         new Setting(searchContainer)
             .addButton(button => button
@@ -106,6 +134,16 @@ export class VideoSearchModal extends Modal {
 
             this.searchResults = await this.searchService.search(query, platform, 10);
 
+            // Détecter les secteurs pour chaque résultat
+            if (this.settings.enableSectorDetection && this.searchResults.length > 0) {
+                new Notice('🔍 Détection des secteurs...');
+                for (const result of this.searchResults) {
+                    const detection = await this.sectorService.detectSector(result);
+                    result.sector = detection.sector;
+                    result.sectorConfidence = detection.confidence;
+                }
+            }
+
             this.resultsContainer.empty();
 
             if (this.searchResults.length === 0) {
@@ -118,9 +156,8 @@ export class VideoSearchModal extends Modal {
 
             new Notice(`✅ ${this.searchResults.length} résultats trouvés`);
 
-            this.searchResults.forEach((result, index) => {
-                this.createResultCard(result, index);
-            });
+            // Appliquer le filtre de secteur
+            this.filterResults();
         } catch (error) {
             console.error('Erreur de recherche:', error);
             this.resultsContainer.empty();
@@ -129,6 +166,27 @@ export class VideoSearchModal extends Modal {
                 cls: 'error-message'
             });
         }
+    }
+
+    filterResults() {
+        this.resultsContainer.empty();
+
+        // Filtrer par secteur si un secteur spécifique est sélectionné
+        this.filteredResults = this.selectedSector === 'all'
+            ? this.searchResults
+            : this.searchResults.filter(r => r.sector === this.selectedSector);
+
+        if (this.filteredResults.length === 0) {
+            this.resultsContainer.createEl('p', {
+                text: `Aucun résultat pour le secteur sélectionné`,
+                cls: 'no-results'
+            });
+            return;
+        }
+
+        this.filteredResults.forEach((result, index) => {
+            this.createResultCard(result, index);
+        });
     }
 
     createResultCard(result: SearchResult, index: number) {
@@ -164,6 +222,24 @@ export class VideoSearchModal extends Modal {
             text: this.formatDuration(result.duration),
             cls: 'duration'
         });
+
+        // Badge de secteur
+        if (result.sector && this.settings.enableSectorDetection) {
+            const sectorBadge = metadata.createEl('span', {
+                cls: 'sector-badge'
+            });
+            const sectorInfo = INDUSTRY_SECTORS[result.sector];
+            sectorBadge.textContent = ` • ${sectorInfo.icon} ${sectorInfo.label}`;
+
+            // Ajouter l'indicateur de confiance si disponible
+            if (result.sectorConfidence) {
+                const confidence = Math.round(result.sectorConfidence * 100);
+                sectorBadge.title = `Confiance: ${confidence}%`;
+                if (result.sectorConfidence < 0.5) {
+                    sectorBadge.addClass('low-confidence');
+                }
+            }
+        }
 
         // Description
         if (result.description) {

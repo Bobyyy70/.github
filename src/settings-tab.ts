@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting } from 'obsidian';
 import VideoTranscriptionPlugin from './main';
+import { INDUSTRY_SECTORS, IndustrySector } from './types';
 
 export class VideoTranscriptionSettingTab extends PluginSettingTab {
     plugin: VideoTranscriptionPlugin;
@@ -328,6 +329,82 @@ export class VideoTranscriptionSettingTab extends PluginSettingTab {
                     await this.plugin.saveSettings();
                 })
             );
+
+        // Section Secteurs d'activité
+        containerEl.createEl('h2', { text: '🏢 Secteurs d\'activité' });
+        containerEl.createEl('p', {
+            text: 'Organisez vos vidéos par domaine pour une meilleure navigation',
+            cls: 'setting-item-description'
+        });
+
+        new Setting(containerEl)
+            .setName('Activer la détection de secteur')
+            .setDesc('Détecter automatiquement le secteur d\'activité des vidéos')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.enableSectorDetection)
+                .onChange(async (value) => {
+                    this.plugin.settings.enableSectorDetection = value;
+                    await this.plugin.saveSettings();
+                    this.display(); // Rafraîchir pour afficher/masquer les options
+                })
+            );
+
+        if (this.plugin.settings.enableSectorDetection) {
+            new Setting(containerEl)
+                .setName('Secteur par défaut')
+                .setDesc('Secteur utilisé si la détection échoue')
+                .addDropdown(dropdown => {
+                    Object.entries(INDUSTRY_SECTORS).forEach(([key, value]) => {
+                        dropdown.addOption(key, `${value.icon} ${value.label}`);
+                    });
+                    dropdown.setValue(this.plugin.settings.defaultSector);
+                    dropdown.onChange(async (value) => {
+                        this.plugin.settings.defaultSector = value as IndustrySector;
+                        await this.plugin.saveSettings();
+                    });
+                });
+
+            new Setting(containerEl)
+                .setName('Organiser par secteur')
+                .setDesc('Créer des sous-dossiers pour chaque secteur d\'activité')
+                .addToggle(toggle => toggle
+                    .setValue(this.plugin.settings.organizeBySector)
+                    .onChange(async (value) => {
+                        this.plugin.settings.organizeBySector = value;
+                        await this.plugin.saveSettings();
+                    })
+                );
+
+            // Sélection des secteurs actifs
+            containerEl.createEl('h3', { text: 'Secteurs activés' });
+            containerEl.createEl('p', {
+                text: 'Sélectionnez les secteurs que vous souhaitez utiliser',
+                cls: 'setting-item-description'
+            });
+
+            Object.entries(INDUSTRY_SECTORS).forEach(([sectorKey, sectorInfo]) => {
+                const sector = sectorKey as IndustrySector;
+                const isEnabled = this.plugin.settings.enabledSectors.includes(sector);
+
+                new Setting(containerEl)
+                    .setName(`${sectorInfo.icon} ${sectorInfo.label}`)
+                    .setDesc(`Mots-clés: ${sectorInfo.keywords.slice(0, 3).join(', ')}${sectorInfo.keywords.length > 3 ? '...' : ''}`)
+                    .addToggle(toggle => toggle
+                        .setValue(isEnabled)
+                        .onChange(async (value) => {
+                            if (value) {
+                                if (!this.plugin.settings.enabledSectors.includes(sector)) {
+                                    this.plugin.settings.enabledSectors.push(sector);
+                                }
+                            } else {
+                                this.plugin.settings.enabledSectors =
+                                    this.plugin.settings.enabledSectors.filter(s => s !== sector);
+                            }
+                            await this.plugin.saveSettings();
+                        })
+                    );
+            });
+        }
 
         // Footer
         containerEl.createEl('hr');

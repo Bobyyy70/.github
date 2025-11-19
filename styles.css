@@ -78,6 +78,21 @@
     color: var(--text-muted);
 }
 
+/* Badge de secteur */
+.sector-badge {
+    font-weight: 500;
+    color: var(--text-accent-hover);
+    padding: 0.1rem 0.4rem;
+    background-color: var(--background-secondary-alt);
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+.sector-badge.low-confidence {
+    opacity: 0.6;
+    font-style: italic;
+}
+
 .video-description {
     margin: 0;
     font-size: 0.9em;

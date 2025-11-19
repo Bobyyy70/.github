@@ -3,15 +3,18 @@ import {
     Transcription,
     ProcessingResults,
     PluginSettings,
-    TranscriptionSegment
+    TranscriptionSegment,
+    INDUSTRY_SECTORS
 } from '../types';
 import { LLMService } from './llm-service';
 import { NotesGeneratorService } from './notes-generator-service';
+import { SectorDetectionService } from './sector-detection-service';
 import { App, Notice, TFile } from 'obsidian';
 
 export class VideoProcessorService {
     private llmService: LLMService;
     private notesGenerator: NotesGeneratorService;
+    private sectorDetection: SectorDetectionService;
 
     constructor(
         private app: App,
@@ -19,11 +22,22 @@ export class VideoProcessorService {
     ) {
         this.llmService = new LLMService(settings);
         this.notesGenerator = new NotesGeneratorService(settings);
+        this.sectorDetection = new SectorDetectionService(settings);
     }
 
     async processVideo(videoSource: VideoSource): Promise<ProcessingResults> {
         try {
             new Notice(`🎬 Traitement de la vidéo: ${videoSource.title}`);
+
+            // Étape 0: Détecter le secteur d'activité
+            if (this.settings.enableSectorDetection && !videoSource.sector) {
+                const detection = await this.sectorDetection.detectSector(videoSource);
+                videoSource.sector = detection.sector;
+                videoSource.sectorConfidence = detection.confidence;
+
+                const sectorInfo = INDUSTRY_SECTORS[detection.sector];
+                new Notice(`📂 Secteur détecté: ${sectorInfo.icon} ${sectorInfo.label}`);
+            }
 
             // Étape 1: Récupérer/Générer la transcription
             const transcription = await this.getTranscription(videoSource);
@@ -40,7 +54,7 @@ export class VideoProcessorService {
                 );
 
                 // Sauvegarder les notes atomiques
-                atomicNotesPaths = await this.saveAtomicNotes(atomicNotes);
+                atomicNotesPaths = await this.saveAtomicNotes(atomicNotes, videoSource);
             }
 
             // Étape 3: Générer le résumé
@@ -52,6 +66,12 @@ export class VideoProcessorService {
                     transcription,
                     videoSource.title
                 );
+
+                // Ajouter le secteur au résumé
+                if (videoSource.sector) {
+                    summary.sector = videoSource.sector;
+                    summary.sectorConfidence = videoSource.sectorConfidence;
+                }
 
                 summaryPath = await this.saveSummary(summary, videoSource);
             }
@@ -156,13 +176,18 @@ Inclus du contenu technique pertinent et structuré.`;
         };
     }
 
-    private async saveAtomicNotes(atomicNotes: any[]): Promise<string[]> {
+    private async saveAtomicNotes(atomicNotes: any[], videoSource: VideoSource): Promise<string[]> {
         const paths: string[] = [];
+
+        // Déterminer le dossier basé sur le secteur
+        const baseFolder = videoSource.sector
+            ? this.sectorDetection.getSectorPath(videoSource.sector, this.settings.atomicNotesFolder)
+            : this.settings.atomicNotesFolder;
 
         for (const note of atomicNotes) {
             const markdown = this.notesGenerator.formatAtomicNoteAsMarkdown(note);
             const fileName = this.sanitizeFileName(note.title);
-            const filePath = `${this.settings.atomicNotesFolder}/${fileName}.md`;
+            const filePath = `${baseFolder}/${fileName}.md`;
 
             await this.createNote(filePath, markdown);
             paths.push(filePath);
@@ -174,7 +199,13 @@ Inclus du contenu technique pertinent et structuré.`;
     private async saveSummary(summary: any, videoSource: VideoSource): Promise<string> {
         const markdown = this.notesGenerator.formatSummaryAsMarkdown(summary, videoSource.url);
         const fileName = this.sanitizeFileName(`${videoSource.title} - Résumé`);
-        const filePath = `${this.settings.summariesFolder}/${fileName}.md`;
+
+        // Déterminer le dossier basé sur le secteur
+        const baseFolder = videoSource.sector
+            ? this.sectorDetection.getSectorPath(videoSource.sector, this.settings.summariesFolder)
+            : this.settings.summariesFolder;
+
+        const filePath = `${baseFolder}/${fileName}.md`;
 
         await this.createNote(filePath, markdown);
         return filePath;
@@ -194,7 +225,13 @@ Inclus du contenu technique pertinent et structuré.`;
         );
 
         const fileName = this.sanitizeFileName(videoSource.title);
-        const filePath = `${this.settings.notesOutputFolder}/${fileName}.md`;
+
+        // Déterminer le dossier basé sur le secteur
+        const baseFolder = videoSource.sector
+            ? this.sectorDetection.getSectorPath(videoSource.sector, this.settings.notesOutputFolder)
+            : this.settings.notesOutputFolder;
+
+        const filePath = `${baseFolder}/${fileName}.md`;
 
         await this.createNote(filePath, markdown);
         return filePath;

@@ -1,5 +1,106 @@
 // Types pour le plugin Video Transcription & Knowledge Extractor
 
+export type IndustrySector =
+    | 'technology-dev'
+    | 'business-entrepreneurship'
+    | 'science-research'
+    | 'education-training'
+    | 'health-medicine'
+    | 'arts-creativity'
+    | 'finance-economy'
+    | 'marketing-communication'
+    | 'design-ux'
+    | 'ai-machine-learning'
+    | 'devops-infrastructure'
+    | 'cybersecurity'
+    | 'data-science'
+    | 'productivity-personal-dev'
+    | 'gaming-esports'
+    | 'other';
+
+export const INDUSTRY_SECTORS: Record<IndustrySector, { label: string; icon: string; keywords: string[] }> = {
+    'technology-dev': {
+        label: 'Technologie & Développement',
+        icon: '💻',
+        keywords: ['programming', 'coding', 'software', 'web dev', 'développement', 'programmation']
+    },
+    'ai-machine-learning': {
+        label: 'IA & Machine Learning',
+        icon: '🤖',
+        keywords: ['ai', 'machine learning', 'deep learning', 'neural network', 'llm', 'intelligence artificielle']
+    },
+    'data-science': {
+        label: 'Data Science & Analytics',
+        icon: '📊',
+        keywords: ['data science', 'analytics', 'big data', 'statistiques', 'analyse de données']
+    },
+    'devops-infrastructure': {
+        label: 'DevOps & Infrastructure',
+        icon: '⚙️',
+        keywords: ['devops', 'kubernetes', 'docker', 'ci/cd', 'infrastructure', 'cloud']
+    },
+    'cybersecurity': {
+        label: 'Cybersécurité',
+        icon: '🔒',
+        keywords: ['security', 'cybersecurity', 'hacking', 'pentesting', 'sécurité']
+    },
+    'business-entrepreneurship': {
+        label: 'Business & Entrepreneuriat',
+        icon: '💼',
+        keywords: ['business', 'startup', 'entrepreneurship', 'management', 'entreprise']
+    },
+    'finance-economy': {
+        label: 'Finance & Économie',
+        icon: '💰',
+        keywords: ['finance', 'investing', 'trading', 'economy', 'crypto', 'économie']
+    },
+    'marketing-communication': {
+        label: 'Marketing & Communication',
+        icon: '📢',
+        keywords: ['marketing', 'seo', 'communication', 'social media', 'branding']
+    },
+    'design-ux': {
+        label: 'Design & UX',
+        icon: '🎨',
+        keywords: ['design', 'ux', 'ui', 'figma', 'user experience', 'interface']
+    },
+    'science-research': {
+        label: 'Science & Recherche',
+        icon: '🔬',
+        keywords: ['science', 'research', 'physics', 'chemistry', 'biology', 'recherche']
+    },
+    'health-medicine': {
+        label: 'Santé & Médecine',
+        icon: '⚕️',
+        keywords: ['health', 'medicine', 'medical', 'santé', 'médecine', 'wellness']
+    },
+    'education-training': {
+        label: 'Éducation & Formation',
+        icon: '📚',
+        keywords: ['education', 'learning', 'teaching', 'course', 'tutorial', 'formation']
+    },
+    'productivity-personal-dev': {
+        label: 'Productivité & Développement Personnel',
+        icon: '🚀',
+        keywords: ['productivity', 'self improvement', 'motivation', 'productivité', 'organisation']
+    },
+    'arts-creativity': {
+        label: 'Arts & Créativité',
+        icon: '🎭',
+        keywords: ['art', 'music', 'creativity', 'creative', 'musique', 'créativité']
+    },
+    'gaming-esports': {
+        label: 'Gaming & Esports',
+        icon: '🎮',
+        keywords: ['gaming', 'esports', 'game dev', 'jeux vidéo', 'gamedev']
+    },
+    'other': {
+        label: 'Autre',
+        icon: '📂',
+        keywords: []
+    }
+};
+
 export interface PluginSettings {
     // API Keys
     youtubeApiKey: string;
@@ -40,6 +141,12 @@ export interface PluginSettings {
     noteNamingPattern: string;
     includeTimestamps: boolean;
     includeTags: boolean;
+
+    // Secteurs d'activité
+    enableSectorDetection: boolean;
+    defaultSector: IndustrySector;
+    organizeBySector: boolean;
+    enabledSectors: IndustrySector[];
 }
 
 export const DEFAULT_SETTINGS: PluginSettings = {
@@ -75,6 +182,18 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     noteNamingPattern: '{{title}} - {{date}}',
     includeTimestamps: true,
     includeTags: true,
+
+    enableSectorDetection: true,
+    defaultSector: 'other',
+    organizeBySector: true,
+    enabledSectors: [
+        'technology-dev',
+        'ai-machine-learning',
+        'data-science',
+        'business-entrepreneurship',
+        'education-training',
+        'other'
+    ],
 };
 
 export interface VideoSource {
@@ -86,6 +205,8 @@ export interface VideoSource {
     thumbnail?: string;
     author?: string;
     publishedAt?: Date;
+    sector?: IndustrySector;
+    sectorConfidence?: number;
 }
 
 export interface SearchResult {
@@ -99,6 +220,8 @@ export interface SearchResult {
     author: string;
     publishedAt: Date;
     viewCount?: number;
+    sector?: IndustrySector;
+    sectorConfidence?: number;
 }
 
 export interface Transcription {
@@ -134,6 +257,8 @@ export interface VideoSummary {
     technicalConcepts: string[];
     useCases: UseCase[];
     relatedResources: string[];
+    sector?: IndustrySector;
+    sectorConfidence?: number;
 }
 
 export interface UseCase {
