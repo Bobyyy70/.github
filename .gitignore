@@ -1,0 +1,22 @@
+# npm
+node_modules
+package-lock.json
+
+# build
+main.js
+*.js.map
+
+# obsidian
+data.json
+.obsidian
+
+# misc
+.DS_Store
+
+# dev
+.vscode
+.idea
+
+# Environment variables
+.env
+.env.local

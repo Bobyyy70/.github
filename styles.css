@@ -1,0 +1,197 @@
+/* Video Transcription & Knowledge Extractor - Styles */
+
+/* Container de recherche */
+.video-search-container {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Conteneur des résultats */
+.search-results-container {
+    max-height: 500px;
+    overflow-y: auto;
+    padding: 0.5rem;
+}
+
+/* Carte de résultat vidéo */
+.video-result-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background-color: var(--background-secondary);
+    transition: all 0.2s ease;
+}
+
+.video-result-card:hover {
+    background-color: var(--background-secondary-alt);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Thumbnail de vidéo */
+.video-thumbnail {
+    width: 200px;
+    height: 112px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+/* Informations de la vidéo */
+.video-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.video-title {
+    margin: 0;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: var(--text-normal);
+    line-height: 1.3;
+}
+
+.video-metadata {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.85em;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+
+.platform-badge {
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-accent);
+}
+
+.author {
+    color: var(--text-muted);
+}
+
+.duration {
+    color: var(--text-muted);
+}
+
+.video-description {
+    margin: 0;
+    font-size: 0.9em;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* Bouton de traitement */
+.process-button {
+    margin-top: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.process-button:hover {
+    background-color: var(--interactive-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.process-button:active {
+    transform: translateY(0);
+}
+
+/* Message d'erreur et aucun résultat */
+.no-results,
+.error-message {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.error-message {
+    color: var(--text-error);
+}
+
+/* Footer des paramètres */
+.settings-footer {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--background-modifier-border);
+}
+
+.settings-footer p {
+    margin: 0.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+/* Modal personnalisé */
+.modal.video-search-modal {
+    max-width: 900px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .video-result-card {
+        flex-direction: column;
+    }
+
+    .video-thumbnail {
+        width: 100%;
+        height: auto;
+    }
+}
+
+/* Animation de chargement */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Scroll bar personnalisé */
+.search-results-container::-webkit-scrollbar {
+    width: 8px;
+}
+
+.search-results-container::-webkit-scrollbar-track {
+    background: var(--background-primary);
+}
+
+.search-results-container::-webkit-scrollbar-thumb {
+    background: var(--background-modifier-border);
+    border-radius: 4px;
+}
+
+.search-results-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* Badge de plateforme coloré */
+.platform-badge.youtube {
+    color: #ff0000;
+}
+
+.platform-badge.gitlab {
+    color: #fc6d26;
+}
+
+.platform-badge.vimeo {
+    color: #1ab7ea;
+}
