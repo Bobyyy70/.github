@@ -79,6 +79,76 @@ export class VideoTranscriptionSettingTab extends PluginSettingTab {
                 })
             );
 
+        new Setting(containerEl)
+            .setName('HuggingFace API Key')
+            .setDesc('Clé API HuggingFace pour modèles open source')
+            .addText(text => text
+                .setPlaceholder('hf_...')
+                .setValue(this.plugin.settings.huggingfaceApiKey)
+                .onChange(async (value) => {
+                    this.plugin.settings.huggingfaceApiKey = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        // Section Modèles Open Source
+        containerEl.createEl('h2', { text: '🌟 Modèles Open Source (Local & Gratuit)' });
+        containerEl.createEl('p', {
+            text: '💡 Utilisez des modèles locaux avec Ollama (100% gratuit et privé) ou HuggingFace',
+            cls: 'setting-item-description'
+        });
+
+        new Setting(containerEl)
+            .setName('Utiliser des modèles locaux')
+            .setDesc('Privilégier Ollama pour des modèles gratuits et privés')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.useLocalModels)
+                .onChange(async (value) => {
+                    this.plugin.settings.useLocalModels = value;
+                    if (value) {
+                        this.plugin.settings.llmProvider = 'ollama';
+                    }
+                    await this.plugin.saveSettings();
+                    this.display(); // Rafraîchir l'affichage
+                })
+            );
+
+        new Setting(containerEl)
+            .setName('Endpoint Ollama')
+            .setDesc('URL de l\'API Ollama (par défaut: http://localhost:11434)')
+            .addText(text => text
+                .setPlaceholder('http://localhost:11434')
+                .setValue(this.plugin.settings.ollamaEndpoint)
+                .onChange(async (value) => {
+                    this.plugin.settings.ollamaEndpoint = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName('Modèle Ollama')
+            .setDesc('Nom du modèle Ollama à utiliser (ex: llama3.2, mistral, codellama)')
+            .addText(text => text
+                .setPlaceholder('llama3.2')
+                .setValue(this.plugin.settings.ollamaModel)
+                .onChange(async (value) => {
+                    this.plugin.settings.ollamaModel = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName('Modèle HuggingFace')
+            .setDesc('Modèle HuggingFace à utiliser (ex: meta-llama/Meta-Llama-3-8B-Instruct)')
+            .addText(text => text
+                .setPlaceholder('meta-llama/Meta-Llama-3-8B-Instruct')
+                .setValue(this.plugin.settings.huggingfaceModel)
+                .onChange(async (value) => {
+                    this.plugin.settings.huggingfaceModel = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
         // Section LLM
         containerEl.createEl('h2', { text: '🤖 Configuration LLM' });
 
@@ -100,6 +170,8 @@ export class VideoTranscriptionSettingTab extends PluginSettingTab {
             .setName('Provider LLM')
             .setDesc('Quel LLM utiliser pour générer les notes')
             .addDropdown(dropdown => dropdown
+                .addOption('ollama', '🌟 Ollama (Local, Gratuit)')
+                .addOption('huggingface', '🤗 HuggingFace (Open Source)')
                 .addOption('openai', 'OpenAI (GPT-4)')
                 .addOption('google', 'Google AI (Gemini)')
                 .addOption('anthropic', 'Anthropic (Claude)')

@@ -7,15 +7,22 @@ export interface PluginSettings {
     openaiApiKey: string;
     anthropicApiKey: string;
     googleAiApiKey: string;
+    huggingfaceApiKey: string;
 
     // Paramètres de transcription
-    transcriptionProvider: 'openai' | 'google' | 'anthropic';
+    transcriptionProvider: 'openai' | 'google' | 'anthropic' | 'ollama';
     transcriptionLanguage: string;
 
     // Paramètres de génération de notes
-    llmProvider: 'openai' | 'google' | 'anthropic';
+    llmProvider: 'openai' | 'google' | 'anthropic' | 'ollama' | 'huggingface';
     llmModel: string;
     temperature: number;
+
+    // Paramètres Open Source
+    ollamaEndpoint: string;
+    ollamaModel: string;
+    huggingfaceModel: string;
+    useLocalModels: boolean;
 
     // Chemins des dossiers
     videoDownloadFolder: string;
@@ -41,13 +48,19 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     openaiApiKey: '',
     anthropicApiKey: '',
     googleAiApiKey: '',
+    huggingfaceApiKey: '',
 
     transcriptionProvider: 'openai',
     transcriptionLanguage: 'fr',
 
-    llmProvider: 'openai',
+    llmProvider: 'ollama',
     llmModel: 'gpt-4-turbo-preview',
     temperature: 0.7,
+
+    ollamaEndpoint: 'http://localhost:11434',
+    ollamaModel: 'llama3.2',
+    huggingfaceModel: 'meta-llama/Meta-Llama-3-8B-Instruct',
+    useLocalModels: true,
 
     videoDownloadFolder: 'Videos',
     notesOutputFolder: 'Notes/Video Transcriptions',

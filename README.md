@@ -15,7 +15,8 @@ Un plugin Obsidian premium qui permet de rechercher, télécharger et transcrire
 - Interface de recherche intuitive avec prévisualisation
 
 ### 🤖 Intelligence Artificielle
-- **Multi-LLM** : Support de OpenAI (GPT-4), Anthropic (Claude), et Google AI (Gemini)
+- **Multi-LLM** : Support de OpenAI (GPT-4), Anthropic (Claude), Google AI (Gemini), **Ollama (gratuit & local)**, et HuggingFace
+- **Modèles Open Source** : Utilisez Llama 3.2, Mistral, CodeLlama **100% gratuitement** avec Ollama
 - **Transcription automatique** : Utilisation de Whisper API ou sous-titres YouTube
 - **Génération intelligente** : Notes atomiques, résumés, cas d'utilisation
 
@@ -110,6 +111,31 @@ npm run build
 1. Accédez à [Google AI Studio](https://makersuite.google.com/)
 2. Générez une clé API
 3. Utilisez Gemini Pro pour la génération
+
+#### 🌟 Ollama - Modèles Open Source Locaux (RECOMMANDÉ - Gratuit !)
+**Ollama permet d'utiliser des modèles puissants gratuitement et en privé sur votre ordinateur !**
+
+1. Installez Ollama : [ollama.com/download](https://ollama.com/download)
+2. Téléchargez un modèle :
+   ```bash
+   ollama pull llama3.2
+   ```
+3. Dans les paramètres du plugin :
+   - Activez "Utiliser des modèles locaux"
+   - Provider LLM : Ollama
+   - Modèle : llama3.2
+
+**Modèles recommandés :**
+- `llama3.2` : Excellent rapport qualité/performance
+- `mistral` : Très bon pour le français
+- `codellama` : Spécialisé pour le code technique
+
+📖 **[Guide complet d'installation Ollama](OLLAMA_SETUP.md)**
+
+#### HuggingFace API (Modèles Open Source)
+1. Créez un compte sur [HuggingFace](https://huggingface.co/)
+2. Générez un token : [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+3. **Modèles gratuits** : `meta-llama/Meta-Llama-3-8B-Instruct`, `mistralai/Mistral-7B-Instruct-v0.2`
 
 ### 2. Paramètres du Plugin
 
@@ -315,22 +341,33 @@ Les contributions sont les bienvenues ! Veuillez :
 ## ❓ FAQ
 
 ### Le plugin nécessite-t-il une connexion internet ?
-Oui, pour accéder aux APIs (YouTube, OpenAI, etc.).
+**Partiellement.** Avec Ollama, la génération de notes se fait 100% localement (pas besoin d'internet). Seule la recherche YouTube nécessite internet.
+
+### Puis-je utiliser le plugin gratuitement ?
+**Oui !** Utilisez Ollama pour des modèles gratuits et locaux :
+- **YouTube API** : Gratuit (avec quotas)
+- **Ollama** : 100% gratuit, tout en local
+- **HuggingFace** : Gratuit pour certains modèles (avec limites)
 
 ### Les vidéos sont-elles téléchargées localement ?
 Dans cette version, non. La transcription se fait via les APIs.
 
 ### Puis-je utiliser mon propre modèle LLM ?
-Oui, le code est modulaire. Vous pouvez ajouter d'autres providers.
+Oui, le code est modulaire. Vous pouvez ajouter d'autres providers. Ollama supporte déjà tous les modèles open source populaires.
 
 ### Combien coûte l'utilisation des APIs ?
+- **Ollama** : **GRATUIT** (local, aucun coût)
+- **HuggingFace** : Gratuit avec limites, payant pour usage intensif
 - YouTube API : Gratuit (quotas)
 - OpenAI : ~$0.006 par minute de vidéo (Whisper) + GPT-4
 - Anthropic : Variable selon le modèle Claude
 - Google AI : Gratuit pour Gemini Pro (limites)
 
+### Quel modèle choisir pour commencer ?
+**Pour débuter gratuitement :** Installez Ollama et utilisez `llama3.2` (excellent rapport qualité/performance, gratuit, privé).
+
 ### Le plugin fonctionne-t-il hors ligne ?
-Non, les APIs nécessitent une connexion internet.
+**Oui, partiellement !** Avec Ollama, la génération de notes et résumés fonctionne hors ligne. Seule la recherche YouTube nécessite internet.
 
 ---
 

@@ -1,8 +1,13 @@
 import { LLMResponse, PluginSettings } from '../types';
 import { Notice } from 'obsidian';
+import { OllamaService } from './ollama-service';
 
 export class LLMService {
-    constructor(private settings: PluginSettings) {}
+    private ollamaService: OllamaService;
+
+    constructor(private settings: PluginSettings) {
+        this.ollamaService = new OllamaService(settings);
+    }
 
     async generateCompletion(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
         try {
@@ -13,6 +18,10 @@ export class LLMService {
                     return await this.googleAICompletion(prompt, systemPrompt);
                 case 'anthropic':
                     return await this.anthropicCompletion(prompt, systemPrompt);
+                case 'ollama':
+                    return await this.ollamaService.generateCompletion(prompt, systemPrompt);
+                case 'huggingface':
+                    return await this.huggingfaceCompletion(prompt, systemPrompt);
                 default:
                     throw new Error(`Provider LLM non supporté: ${this.settings.llmProvider}`);
             }
@@ -124,9 +133,50 @@ export class LLMService {
         };
     }
 
+    private async huggingfaceCompletion(prompt: string, systemPrompt?: string): Promise<LLMResponse> {
+        const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
+        const model = this.settings.huggingfaceModel || 'meta-llama/Meta-Llama-3-8B-Instruct';
+
+        const response = await fetch(
+            `https://api-inference.huggingface.co/models/${model}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.settings.huggingfaceApiKey}`
+                },
+                body: JSON.stringify({
+                    inputs: fullPrompt,
+                    parameters: {
+                        temperature: this.settings.temperature,
+                        max_new_tokens: 4096,
+                        return_full_text: false
+                    }
+                })
+            }
+        );
+
+        if (!response.ok) {
+            const error = await response.text();
+            throw new Error(`HuggingFace API error: ${error}`);
+        }
+
+        const data = await response.json();
+        const content = Array.isArray(data) ? data[0].generated_text : data.generated_text;
+
+        return {
+            content,
+            tokensUsed: 0, // HuggingFace ne retourne pas toujours le nombre de tokens
+            model: model
+        };
+    }
+
     async transcribeAudio(audioPath: string): Promise<string> {
         if (this.settings.transcriptionProvider === 'openai') {
             return await this.openAITranscription(audioPath);
+        } else if (this.settings.transcriptionProvider === 'ollama') {
+            new Notice('⚠️ Ollama ne supporte pas encore la transcription audio');
+            throw new Error('Transcription audio non supportée par Ollama');
         }
         throw new Error('Seul OpenAI est supporté pour la transcription audio pour le moment');
     }
